@@ -24,7 +24,8 @@ public class CollectionBuilder<C extends Collection<T>, T> {
         return this;
     }
 
-    public CollectionBuilder<C, T> addAll(T... e) {
+    @SafeVarargs
+    public final CollectionBuilder<C, T> addAll(T... e) {
         addAll(Arrays.asList(e));
         return this;
     }
