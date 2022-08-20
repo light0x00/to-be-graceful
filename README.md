@@ -4,6 +4,9 @@
 
 ## 快速上手
 
+![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.light0x00/to-be-graceful/badge.svg) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ```xml
 <dependency>
     <groupId>io.github.light0x00</groupId>
