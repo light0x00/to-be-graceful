@@ -86,51 +86,55 @@ assertTrue(result.get() == 7);
 
 ```java
 public void exampleThatNotGraceful() {
+    //Message 和 Group 之间的连接字段
     Function<Message, Integer> drivingGroupKey = Message::getGroupId;
     Function<Group, Integer> joiningGroupKey = Group::getGroupId;
 
-    BiFunction<Message, Group, MessageVO> merge = (msg, group) -> {
-        MessageVO out = new MessageVO();
-        out.setContent(msg.getContent());
-        out.setGroupName(group.getGroupName());
-        out.setUserId(msg.getUserId());
-        return out;
+    //Message 合并 Group 的函数
+    BiFunction<Message, Group, MessageVO> mergedMsgAndGroup = (msg, group) -> {
+    MessageVO out = new MessageVO();
+    out.setContent(msg.getContent());
+    out.setGroupName(group.getGroupName());
+    out.setUserId(msg.getUserId());
+    return out;
     };
 
+    //Message 和 User 之间的连接字段
     Function<MessageVO, Integer> drivingUserKey = MessageVO::getUserId;
     Function<User, Integer> joiningUserKey = User::getUserId;
 
-    BiFunction<MessageVO, User, MessageVO> merge2 = (msg, usr) -> {
-        msg.setUserName(usr.getUserName());
-        return msg;
+    //Message 合并 User 的函数
+    BiFunction<MessageVO, User, MessageVO> mergedMsgAndUser = (msg, usr) -> {
+    msg.setUserName(usr.getUserName());
+    return msg;
     };
 
-    Collection<MessageVO> result = new LinkedList<>();
-
+    List<MessageVO> result = new LinkedList<>();
+    //遍历消息列表
     for (Message message : messages) {
-        //怎么找
-        Group group = groups.stream().filter(g -> Objects.equals(
-                        joiningGroupKey.apply(g),
-                        drivingGroupKey.apply(message)
-                ))
-                .findAny().get();
-        //怎么合
-        MessageVO merged = merge.apply(message, group);
+    //合并群组谢谢
+    Group group = groups.stream().filter(g -> Objects.equals(
+    joiningGroupKey.apply(g),
+    drivingGroupKey.apply(message)
+    ))
+    .findAny().get();
+    MessageVO msgVO =mergedMsgAndGroup.apply(message, group);
+    //合并用户信息
+    User user = users.stream().filter(u ->
+    Objects.equals(joiningUserKey.apply(u), drivingUserKey.apply(msgVO)))
+    .findAny().orElse(null);
 
-        User user = users.stream().filter(u ->
-                        Objects.equals(joiningUserKey.apply(u), drivingUserKey.apply(merged)))
-                .findAny().orElse(null);
-
-        MessageVO merged2 = merge2.apply(merged, user);
-        result.add(merged2);
+    //将合并后的结果放入结果集
+    MessageVO merged2 = mergedMsgAndUser.apply(msgVO, user);
+    result.add(merged2);
     }
-}
+    }
 ```
 
 然而，更优雅的写法是：
 
 ```java
-Collection<MessageVO> result = StreamX.of(messages)
+List<MessageVO> result = StreamX.of(messages)
         .join(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
                 (msg, group) -> {
                     MessageVO out = new MessageVO();
