@@ -11,7 +11,7 @@
 <dependency>
     <groupId>io.github.light0x00</groupId>
     <artifactId>to-be-graceful</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 </dependency>
 ```
 
@@ -39,7 +39,6 @@ Optional<Integer> result = StreamX.of(Arrays.asList(1, -2, 3, -4, 5, -6))
 assertTrue(result.isPresent());
 assertTrue(result.get() == 7);
 ```
-
 
 ## 解决了什么痛点？
 
