@@ -128,7 +128,7 @@ public void exampleThatNotGraceful() {
     MessageVO merged2 = mergedMsgAndUser.apply(msgVO, user);
     result.add(merged2);
     }
-    }
+}
 ```
 
 然而，更优雅的写法是：
