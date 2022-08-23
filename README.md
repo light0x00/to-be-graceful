@@ -112,7 +112,7 @@ public void exampleThatNotGraceful() {
     List<MessageVO> result = new LinkedList<>();
     //遍历消息列表
     for (Message message : messages) {
-    //合并群组谢谢
+    //合并群组信息
     Group group = groups.stream().filter(g -> Objects.equals(
     joiningGroupKey.apply(g),
     drivingGroupKey.apply(message)
