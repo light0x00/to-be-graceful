@@ -84,10 +84,9 @@ public class StreamXTest {
                             out.setUserId(msg.getUserId());
                             return out;
                         })
-                .join(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
+                .joinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
                         (msg, usr) -> {
                             msg.setUserName(usr.getUserName());
-                            return msg;
                         })
                 .collect(ArrayList::new);
         result.forEach(System.out::println);
@@ -230,7 +229,7 @@ public class StreamXTest {
                             drivingGroupKey.apply(message)
                     ))
                     .findAny().get();
-            MessageVO msgVO =mergedMsgAndGroup.apply(message, group);
+            MessageVO msgVO = mergedMsgAndGroup.apply(message, group);
             //合并用户信息
             User user = users.stream().filter(u ->
                             Objects.equals(joiningUserKey.apply(u), drivingUserKey.apply(msgVO)))
