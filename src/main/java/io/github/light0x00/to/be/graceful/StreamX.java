@@ -25,15 +25,17 @@ public interface StreamX<T> {
     }
 
     /**
+     * 适用场景: A join B 返回 C
+     *
      * @param joinType            左连接 or 内连接
      * @param joiningCollection   要连接的集合
      * @param drivingKeyExtractor 如何获取`驱动集合的连接键值`
      * @param joiningKeyExtractor 如何获取`被连接集合的连接键值`
      * @param joinerSupplier      连接算法,见 {@link Joiners}
-     * @param eachToJoin 驱动集合的每一条记录发生连接时执行,输入: 驱动集合元素和连接集合元素,输出: 任意类型
-     * @param <Joining> 连接集合的元素类型
-     * @param <NextOutput> 连接后返回的类型
-     * @param <JoinKey> 连接键类型
+     * @param eachToJoin          驱动集合的每一条记录发生连接时执行,输入: 驱动集合元素和连接集合元素,输出: 任意类型
+     * @param <Joining>           连接集合的元素类型
+     * @param <NextOutput>        连接后返回的类型
+     * @param <JoinKey>           连接键类型
      */
     <Joining, NextOutput, JoinKey> StreamX<NextOutput> join(JoinType joinType,
                                                             Collection<Joining> joiningCollection,
@@ -53,7 +55,37 @@ public interface StreamX<T> {
         return join(joinType, joiningCollection, drivingKeyExtractor, joiningKeyExtractor, Joiners.byScan(), eachToJoin);
     }
 
-    StreamX<T> forEach(Consumer<T> consumer);
+    /**
+     * 适用场景： A join B 返回 A
+     */
+    default <Joining, JoinKey> StreamX<T> joinAsItself(
+            JoinType joinType,
+            Collection<Joining> joiningCollection,
+            Function<T, JoinKey> drivingKeyExtractor,
+            Function<Joining, JoinKey> joiningKeyExtractor,
+            JoinerSupplier joinerSupplier,
+            BiConsumer<T, Joining> eachToJoin
+    ) {
+        return join(joinType, joiningCollection, drivingKeyExtractor, joiningKeyExtractor, joinerSupplier, (d, j) -> {
+            eachToJoin.accept(d, j);
+            return d;
+        });
+    }
+
+    /**
+     * @see #joinAsItself(JoinType, Collection, Function, Function, JoinerSupplier, BiConsumer)
+     */
+    default <Joining, JoinKey> StreamX<T> joinAsItself(
+            JoinType joinType,
+            Collection<Joining> joiningCollection,
+            Function<T, JoinKey> drivingKeyExtractor,
+            Function<Joining, JoinKey> joiningKeyExtractor,
+            BiConsumer<T, Joining> eachToJoin
+    ) {
+        return joinAsItself(joinType, joiningCollection, drivingKeyExtractor, joiningKeyExtractor, Joiners.byScan(), eachToJoin);
+    }
+
+    StreamX<T> consume(Consumer<T> consumer);
 
     <M> StreamX<M> map(Function<T, M> mapper);
 
@@ -63,7 +95,18 @@ public interface StreamX<T> {
 
     Optional<T> findFirst();
 
-    <C extends Collection<T>> C collect(Supplier<C> cSupplier);
+    void forEach(Consumer<T> consumer);
+
+    default <C extends Collection<T>> C collect(Supplier<C> cSupplier) {
+        C outs = cSupplier.get();
+        forEach(outs::add);
+        return outs;
+    }
+
+    default void withoutCollect() {
+        forEach((o) -> {
+        });
+    }
 
     interface Chain<T> {
         void next(T in);
@@ -105,7 +148,7 @@ public interface StreamX<T> {
         }
 
         @Override
-        public StreamX<Output> forEach(Consumer<Output> consumer) {
+        public StreamX<Output> consume(Consumer<Output> consumer) {
             return new StreamPipeline<Output, Output>(this, collection) {
                 @Override
                 void invoke(Output out, Chain<Output> chain) {
@@ -174,14 +217,11 @@ public interface StreamX<T> {
 
         @SuppressWarnings({"unchecked", "rawtypes"})
         @Override
-        public <C extends Collection<Output>> C collect(Supplier<C> cSupplier) {
-            C outs = cSupplier.get();
-            Chain chain = buildChain((Chain<Output>) outs::add);
-
+        public void forEach(Consumer<Output> collector) {
+            Chain chain = buildChain((Chain<Output>) collector::accept);
             for (Object o : collection) {
                 chain.next(o);
             }
-            return outs;
         }
 
         @SuppressWarnings({"unchecked", "rawtypes"})

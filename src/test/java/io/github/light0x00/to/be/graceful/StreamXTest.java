@@ -160,9 +160,44 @@ public class StreamXTest {
         assertTrue(first.get() == 3);
     }
 
+    @Test
+    public void testForEach() {
+        List<Integer> drivingList = Arrays.asList(1, 2, 3, 4, 5);
+        List<Integer> joiningList = Arrays.asList(1, 3, 4, 5, 6);
+
+        ArrayList<Integer> result = new ArrayList<>();
+
+        StreamX.of(drivingList)
+                .join(JoinType.LEFT_JOIN, joiningList, Function.identity(), Function.identity(),
+                        (a, b) ->
+                                Integer.sum(Optional.ofNullable(a).orElse(0), Optional.ofNullable(b).orElse(0))
+                )
+                .forEach(result::add);
+        assertThat(result, hasItems(2, 2, 6, 8, 10));
+    }
+
+    @Test
+    public void testWithoutCollect() {
+        List<Integer> drivingList = Arrays.asList(1, 2, 3, 4, 5);
+        List<Integer> joiningList = Arrays.asList(1, 3, 4, 5, 6);
+        List<Integer> joiningList2 = Arrays.asList(1, 4, 6);
+
+        ArrayList<Integer> result1 = new ArrayList<>();
+        ArrayList<Integer> result2 = new ArrayList<>();
+
+        StreamX.of(drivingList)
+                .joinAsItself(JoinType.INNER_JOIN, joiningList, Function.identity(), Function.identity(),
+                        (a, b) -> result1.add(a)
+                )
+                .joinAsItself(JoinType.INNER_JOIN, joiningList2, Function.identity(), Function.identity(),
+                        (a, b) -> result2.add(a)
+                )
+                .withoutCollect();
+        assertThat(result1, hasItems(1, 3, 4, 5));
+        assertThat(result2, hasItems(1, 4));
+    }
 
     public void exampleThatNotGraceful() {
-
         Function<Message, Integer> drivingGroupKey = Message::getGroupId;
         Function<Group, Integer> joiningGroupKey = Group::getGroupId;
 
