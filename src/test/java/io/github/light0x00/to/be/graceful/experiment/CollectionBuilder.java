@@ -2,9 +2,10 @@ package io.github.light0x00.to.be.graceful.experiment;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Supplier;
 
 /**
- * @author light
+ * @author 陈光应
  * @date 2022/8/12
  */
 public class CollectionBuilder<C extends Collection<T>, T> {
@@ -15,8 +16,16 @@ public class CollectionBuilder<C extends Collection<T>, T> {
         this.coll = coll;
     }
 
-    public static <C extends Collection<T>, T> CollectionBuilder<C, T> from(C coll) {
+    public static  <C extends Collection<T>, T> CollectionBuilder<C, T>  from(Supplier<C> collSupplier, T... t) {
+        return new CollectionBuilder<>(collSupplier.get()).addVarargs(t);
+    }
+
+    public static <C extends Collection<T>, T> CollectionBuilder<C, T> fromCollection(C coll) {
         return new CollectionBuilder<>(coll);
+    }
+
+    public static <C extends Collection<T>, T> CollectionBuilder<C, T> from(Supplier<C> collSupplier) {
+        return new CollectionBuilder<>(collSupplier.get());
     }
 
     public CollectionBuilder<C, T> add(T ele) {
@@ -24,9 +33,9 @@ public class CollectionBuilder<C extends Collection<T>, T> {
         return this;
     }
 
-    @SafeVarargs
-    public final CollectionBuilder<C, T> addAll(T... e) {
-        addAll(Arrays.asList(e));
+    public CollectionBuilder<C, T> addVarargs(T... e) {
+        Collection<T> ts = Arrays.asList(e);
+        this.coll.addAll(ts);
         return this;
     }
 

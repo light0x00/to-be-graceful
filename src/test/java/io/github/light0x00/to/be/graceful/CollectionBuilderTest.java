@@ -4,9 +4,11 @@ import io.github.light0x00.to.be.graceful.experiment.CollectionBuilder;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
@@ -17,12 +19,12 @@ public class CollectionBuilderTest {
 
     @Test
     public void test() {
-        List<Integer> list = CollectionBuilder.from(new ArrayList<Integer>())
-                .addAll(1, 2, 3)
+        List<Integer> list = CollectionBuilder.fromCollection(new ArrayList<Integer>())
+                .addVarargs(1, 2, 3)
                 .add(4)
                 .build();
 
-        assertThat(list, hasItems(1, 2, 3, 4));
+        assertThat(list, is(Arrays.asList(1, 2, 3, 4)));
     }
 
 }

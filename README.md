@@ -18,27 +18,36 @@
 
 Join
 
-```java
-List<Integer> drivingList=Arrays.asList(1,3,5,7);
-        List<Integer> joiningList=Arrays.asList(1,2,5);
 
-        ArrayList<Integer> result=StreamX.of(drivingList)
-        .join(JoinType.INNER_JOIN,joiningList,Function.identity(),Function.identity(),
-        Integer::sum)
-        .collect(ArrayList::new);
-        assertThat(result,hasItems(2,10));
+```java
+	List<Integer> drivingCollection = Arrays.asList(1, 2, 3, 4);
+	List<Integer> joiningCollection = Arrays.asList(1, 1, 2, 1, 2, 3);
+	List<List<Integer>> result = StreamX.of(drivingCollection)
+			.join(JoinType.INNER_JOIN, joiningCollection, Function.identity(), Function.identity(),
+					(driving, joiningList) -> {
+							System.out.println("驱动表记录:" + driving + ",连接到的记录:" + joiningList);
+							ArrayList<Integer> merge = new ArrayList<>();
+							merge.add(driving);
+							merge.addAll(joiningList);
+							return merge;
+					})
+			.collect(ArrayList::new);
+
+//        驱动表记录:1,连接到的记录:[1, 1, 1]
+//        驱动表记录:2,连接到的记录:[2, 2]
+//        驱动表记录:3,连接到的记录:[3]
 ```
 
 Filter\Map\Reduce
 
 ```java
-Optional<Integer> result=StreamX.of(Arrays.asList(1,-2,3,-4,5,-6))
-        .map(Math::abs)
-        .filter(i->i>2&&i< 5)
-        .reduce(Integer::sum);
+	Optional<Integer> result=StreamX.of(Arrays.asList(1,-2,3,-4,5,-6))
+			.map(Math::abs)
+			.filter(i->i>2&&i< 5)
+			.reduce(Integer::sum);
 
-        assertTrue(result.isPresent());
-        assertTrue(result.get()==7);
+			assertTrue(result.isPresent());
+			assertTrue(result.get()==7);
 ```
 
 ## 解决了什么痛点？
@@ -86,49 +95,27 @@ static class MessageVO {
 按照一般的写法如下：
 
 ```java
-public void exampleThatNotGraceful() {
-    //Message 和 Group 之间的连接字段
-    Function<Message, Integer> drivingGroupKey = Message::getGroupId;
-    Function<Group, Integer> joiningGroupKey = Group::getGroupId;
+List<MessageVO> result = new LinkedList<>();
+//遍历消息列表
+for (Message msg : messages){
+    MessageVO msgVO=new MessageVO();
+    msgVO.setContent(msg.getContent());
+    msgVO.setUserId(msg.getUserId());
 
-    //Message 合并 Group 的函数
-    BiFunction<Message, Group, MessageVO> mergedMsgAndGroup = (msg, group) -> {
-        MessageVO out = new MessageVO();
-        out.setContent(msg.getContent());
-        out.setGroupName(group.getGroupName());
-        out.setUserId(msg.getUserId());
-        return out;
-    };
+    //合并群组信息
+    Group group=groups.stream()
+        .filter(g->Objects.equals(g.getGroupId(),msg.getGroupId()))
+        .findAny().get();
+    msgVO.setGroupName(group.getGroupName());
 
-    //Message 和 User 之间的连接字段
-    Function<MessageVO, Integer> drivingUserKey = MessageVO::getUserId;
-    Function<User, Integer> joiningUserKey = User::getUserId;
+    //合并用户信息
+    User user=users.stream()
+        .filter(usr->Objects.equals(usr.getUserId(),msg.getUserId()))
+        .findAny().orElse(null);
+    msgVO.setUserName(user.getUserName());
 
-    //Message 合并 User 的函数
-    BiFunction<MessageVO, User, MessageVO> mergedMsgAndUser = (msg, usr) -> {
-        msg.setUserName(usr.getUserName());
-        return msg;
-    };
-
-    List<MessageVO> result = new LinkedList<>();
-    //遍历消息列表
-    for (Message message : messages) {
-        //合并群组信息
-        Group group = groups.stream().filter(g -> Objects.equals(
-                        joiningGroupKey.apply(g),
-                        drivingGroupKey.apply(message)
-                ))
-                .findAny().get();
-        MessageVO msgVO = mergedMsgAndGroup.apply(message, group);
-        //合并用户信息
-        User user = users.stream().filter(u ->
-                        Objects.equals(joiningUserKey.apply(u), drivingUserKey.apply(msgVO)))
-                .findAny().orElse(null);
-
-        //将合并后的结果放入结果集
-        MessageVO merged2 = mergedMsgAndUser.apply(msgVO, user);
-        result.add(merged2);
-    }
+    //将合并后的结果放入结果集
+    result.add(msgVO);
 }
 ```
 
@@ -136,19 +123,19 @@ public void exampleThatNotGraceful() {
 
 ```java
 List<MessageVO> result = StreamX.of(messages)
-.join(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
-    (msg, group) -> {
-        MessageVO out = new MessageVO();
-        out.setContent(msg.getContent());
-        out.setGroupName(group.getGroupName());
-        out.setUserId(msg.getUserId());
-        return out;
-    })
-.joinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
-    (msg, usr) -> {
-        msg.setUserName(usr.getUserName());
-    })
-.collect(ArrayList::new);
+    .join(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
+        (msg, group) -> {
+            MessageVO out = new MessageVO();
+            out.setContent(msg.getContent());
+            out.setGroupName(group.getGroupName());
+            out.setUserId(msg.getUserId());
+            return out;
+        })
+    .joinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
+        (msg, usr) -> {
+            msg.setUserName(usr.getUserName());
+        })
+    .collect(ArrayList::new);
 ```
 
 

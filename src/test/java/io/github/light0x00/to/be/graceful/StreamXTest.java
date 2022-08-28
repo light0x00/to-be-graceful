@@ -1,15 +1,17 @@
 package io.github.light0x00.to.be.graceful;
 
+import io.github.light0x00.to.be.graceful.experiment.CollectionBuilder;
 import io.github.light0x00.to.be.graceful.streamx.JoinType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.junit.Test;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -76,7 +78,7 @@ public class StreamXTest {
     @Test
     public void testJoin0() {
         List<MessageVO> result = StreamX.of(messages)
-                .join(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
+                .flapJoin(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
                         (msg, group) -> {
                             MessageVO out = new MessageVO();
                             out.setContent(msg.getContent());
@@ -84,12 +86,94 @@ public class StreamXTest {
                             out.setUserId(msg.getUserId());
                             return out;
                         })
-                .joinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
+                .flapJoinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
                         (msg, usr) -> {
                             msg.setUserName(usr.getUserName());
                         })
                 .collect(ArrayList::new);
         result.forEach(System.out::println);
+    }
+
+
+    @Test
+    public void testJoin() {
+        List<Integer> drivingCollection = Arrays.asList(1, 2, 3, 4);
+        List<Integer> joiningCollection = Arrays.asList(1, 1, 2, 1, 2, 3);
+        List<List<Integer>> collect = StreamX.of(drivingCollection)
+                .join(JoinType.LEFT_JOIN, joiningCollection, Function.identity(), Function.identity(),
+                        (d, joiningList) -> {
+                            return CollectionBuilder.fromCollection(new ArrayList<Integer>())
+                                    .add(d)
+                                    .addAll(Optional.ofNullable(joiningList).orElse(Collections.emptyList()))
+                                    .build();
+                        })
+                .collect(ArrayList::new);
+
+        assertThat(collect, is(Arrays.asList(
+                Arrays.asList(1, 1, 1, 1),
+                Arrays.asList(2, 2, 2),
+                Arrays.asList(3, 3),
+                Arrays.asList(4))));
+    }
+
+    static class A {
+        int id;
+        int fk_id;
+    }
+
+    static class B {
+        int id;
+    }
+
+    @Test
+    public void testJoin2() {
+        List<Integer> drivingCollection = Arrays.asList(1, 2, 3, 4);
+        List<Integer> joiningCollection = Arrays.asList(1, 1, 2, 1, 2, 3);
+        List<List<Integer>> result = StreamX.of(drivingCollection)
+                .join(JoinType.INNER_JOIN, joiningCollection, Function.identity(), Function.identity(),
+                        (driving, joiningList) -> {
+                            System.out.println("驱动表记录:" + driving + ",连接到的记录:" + joiningList);
+                            ArrayList<Integer> merge = new ArrayList<>();
+                            merge.add(driving);
+                            merge.addAll(joiningList);
+                            return merge;
+                        })
+                .collect(ArrayList::new);
+        System.out.println(result);
+    }
+
+    @Test
+    public void testFlapJoin() {
+        List<Integer> drivingList = Arrays.asList(1, 2, 3, 4);
+        List<Integer> joiningList = Arrays.asList(1, 1, 2, 1, 2, 3);
+        List<List<Integer>> collect = StreamX.of(drivingList)
+                .flapJoin(JoinType.LEFT_JOIN, joiningList, Function.identity(), Function.identity(), Arrays::asList)
+                .collect(ArrayList::new);
+        System.out.println(collect);
+        assertThat(collect, is(Arrays.asList(
+                Arrays.asList(1, 1),
+                Arrays.asList(1, 1),
+                Arrays.asList(1, 1),
+                Arrays.asList(2, 2),
+                Arrays.asList(2, 2),
+                Arrays.asList(3, 3),
+                Arrays.asList(4, null)
+        )));
+    }
+
+    @Test
+    public void testJoinFirst() {
+        List<Integer> drivingList = Arrays.asList(1, 2, 3, 4);
+        List<Integer> joiningList = Arrays.asList(1, 1, 2, 1, 2, 3);
+        List<List<Integer>> collect = StreamX.of(drivingList)
+                .joinFirst(JoinType.LEFT_JOIN, joiningList, Function.identity(), Function.identity(), Arrays::asList)
+                .collect(ArrayList::new);
+        assertThat(collect, is(Arrays.asList(
+                Arrays.asList(1, 1),
+                Arrays.asList(2, 2),
+                Arrays.asList(3, 3),
+                Arrays.asList(4, null)
+        )));
     }
 
     @Test
@@ -98,7 +182,7 @@ public class StreamXTest {
         List<Integer> joiningList = Arrays.asList(1, 2, 5);
 
         ArrayList<Integer> result = StreamX.of(drivingList)
-                .join(JoinType.INNER_JOIN, joiningList, Function.identity(), Function.identity(),
+                .flapJoin(JoinType.INNER_JOIN, joiningList, Function.identity(), Function.identity(),
                         Integer::sum)
                 .collect(ArrayList::new);
         assertThat(result, hasItems(2, 10));
@@ -110,7 +194,7 @@ public class StreamXTest {
         List<Integer> joiningList = Arrays.asList(1, 3, 4, 5, 6);
 
         List<Integer> result = StreamX.of(drivingList)
-                .join(JoinType.LEFT_JOIN, joiningList, Function.identity(), Function.identity(),
+                .flapJoin(JoinType.LEFT_JOIN, joiningList, Function.identity(), Function.identity(),
                         (a, b) ->
                                 Integer.sum(Optional.ofNullable(a).orElse(0), Optional.ofNullable(b).orElse(0))
                 )
@@ -167,7 +251,7 @@ public class StreamXTest {
         ArrayList<Integer> result = new ArrayList<>();
 
         StreamX.of(drivingList)
-                .join(JoinType.LEFT_JOIN, joiningList, Function.identity(), Function.identity(),
+                .flapJoin(JoinType.LEFT_JOIN, joiningList, Function.identity(), Function.identity(),
                         (a, b) ->
                                 Integer.sum(Optional.ofNullable(a).orElse(0), Optional.ofNullable(b).orElse(0))
                 )
@@ -197,48 +281,30 @@ public class StreamXTest {
     }
 
     public void exampleThatNotGraceful() {
-        //Message 和 Group 之间的连接字段
-        Function<Message, Integer> drivingGroupKey = Message::getGroupId;
-        Function<Group, Integer> joiningGroupKey = Group::getGroupId;
-
-        //Message 合并 Group 的函数
-        BiFunction<Message, Group, MessageVO> mergedMsgAndGroup = (msg, group) -> {
-            MessageVO out = new MessageVO();
-            out.setContent(msg.getContent());
-            out.setGroupName(group.getGroupName());
-            out.setUserId(msg.getUserId());
-            return out;
-        };
-
-        //Message 和 User 之间的连接字段
-        Function<MessageVO, Integer> drivingUserKey = MessageVO::getUserId;
-        Function<User, Integer> joiningUserKey = User::getUserId;
-
-        //Message 合并 User 的函数
-        BiFunction<MessageVO, User, MessageVO> mergedMsgAndUser = (msg, usr) -> {
-            msg.setUserName(usr.getUserName());
-            return msg;
-        };
-
         List<MessageVO> result = new LinkedList<>();
         //遍历消息列表
-        for (Message message : messages) {
+        for (Message msg : messages) {
+
+            MessageVO msgVO = new MessageVO();
+            msgVO.setContent(msg.getContent());
+            msgVO.setUserId(msg.getUserId());
+
             //合并群组信息
-            Group group = groups.stream().filter(g -> Objects.equals(
-                            joiningGroupKey.apply(g),
-                            drivingGroupKey.apply(message)
-                    ))
+            Group group = groups.stream()
+                    .filter(g -> Objects.equals(g.getGroupId(), msg.getGroupId()))
                     .findAny().get();
-            MessageVO msgVO = mergedMsgAndGroup.apply(message, group);
+            msgVO.setGroupName(group.getGroupName());
+
             //合并用户信息
-            User user = users.stream().filter(u ->
-                            Objects.equals(joiningUserKey.apply(u), drivingUserKey.apply(msgVO)))
+            User user = users.stream()
+                    .filter(usr -> Objects.equals(usr.getUserId(), msg.getUserId()))
                     .findAny().orElse(null);
+            msgVO.setUserName(user.getUserName());
 
             //将合并后的结果放入结果集
-            MessageVO merged2 = mergedMsgAndUser.apply(msgVO, user);
-            result.add(merged2);
+            result.add(msgVO);
         }
+        result.forEach(System.out::println);
     }
 
 }

@@ -30,26 +30,45 @@ public abstract class StreamPipeline<Input, Output> implements StreamX<Output> {
                                                                    Collection<Joining> joiningCollection,
                                                                    Function<Output, JoinKey> drivingKeyExtractor,
                                                                    Function<Joining, JoinKey> joiningKeyExtractor,
-                                                                   JoinerSupplier joinerSupplier,
-                                                                   BiFunction<Output, Joining, NextOutput> eachToJoin) {
+                                                                   JoinMatcherWrapper joinMatcherWrapper,
+                                                                   BiFunction<Output, List<Joining>, NextOutput> eachToJoin) {
+        final Function<Output, List<Joining>> matcher = joinMatcherWrapper.create(joiningCollection, drivingKeyExtractor, joiningKeyExtractor);
         return new StreamPipeline<Output, NextOutput>(this, collection) {
-            final Joiner<Output, Joining> joiner;
-
-            {
-                joiner = joinerSupplier.create(joiningCollection, drivingKeyExtractor, joiningKeyExtractor);
-            }
-
             @Override
             public void invoke(Output driving, Chain<NextOutput> chain) {
-                Optional<Joining> joining = joiner.doJoin(driving);
-                if (joining.isPresent()) {
-                    chain.next(eachToJoin.apply(driving, joining.get()));
+                List<Joining> joiningList = matcher.apply(driving);
+                if (!joiningList.isEmpty()) {
+                    chain.next(eachToJoin.apply(driving, joiningList));
                 } else if (joinType == JoinType.LEFT_JOIN) {
                     chain.next(eachToJoin.apply(driving, null));
                 }
             }
         };
     }
+
+    @Override
+    public <Joining, NextOutput, JoinKey> StreamX<NextOutput> flapJoin(JoinType joinType,
+                                                                       Collection<Joining> joiningCollection,
+                                                                       Function<Output, JoinKey> drivingKeyExtractor,
+                                                                       Function<Joining, JoinKey> joiningKeyExtractor,
+                                                                       JoinMatcherWrapper joinMatcherWrapper,
+                                                                       BiFunction<Output, Joining, NextOutput> eachToJoin) {
+        final Function<Output, List<Joining>> matcher = joinMatcherWrapper.create(joiningCollection, drivingKeyExtractor, joiningKeyExtractor);
+        return new StreamPipeline<Output, NextOutput>(this, collection) {
+            @Override
+            public void invoke(Output driving, Chain<NextOutput> chain) {
+                List<Joining> joiningList = matcher.apply(driving);
+                if (!joiningList.isEmpty()) {
+                    for (Joining joining : joiningList) {
+                        chain.next(eachToJoin.apply(driving, joining));
+                    }
+                } else if (joinType == JoinType.LEFT_JOIN) {
+                    chain.next(eachToJoin.apply(driving, null));
+                }
+            }
+        };
+    }
+
 
     @Override
     public StreamX<Output> consume(Consumer<Output> consumer) {
