@@ -8,30 +8,28 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ```xml
-
 <dependency>
     <groupId>io.github.light0x00</groupId>
     <artifactId>to-be-graceful</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 </dependency>
 ```
 
 Join
 
-
 ```java
-	List<Integer> drivingCollection = Arrays.asList(1, 2, 3, 4);
-	List<Integer> joiningCollection = Arrays.asList(1, 1, 2, 1, 2, 3);
-	List<List<Integer>> result = StreamX.of(drivingCollection)
-			.join(JoinType.INNER_JOIN, joiningCollection, Function.identity(), Function.identity(),
-					(driving, joiningList) -> {
-							System.out.println("驱动表记录:" + driving + ",连接到的记录:" + joiningList);
-							ArrayList<Integer> merge = new ArrayList<>();
-							merge.add(driving);
-							merge.addAll(joiningList);
-							return merge;
-					})
-			.collect(ArrayList::new);
+List<Integer> drivingCollection = Arrays.asList(1, 2, 3, 4);
+List<Integer> joiningCollection = Arrays.asList(1, 1, 2, 1, 2, 3);
+List<List<Integer>> result = StreamX.of(drivingCollection)
+        .join(JoinType.INNER_JOIN, joiningCollection, Function.identity(), Function.identity(),
+                (driving, joiningList) -> {
+                        System.out.println("驱动表记录:" + driving + ",连接到的记录:" + joiningList);
+                        ArrayList<Integer> merge = new ArrayList<>();
+                        merge.add(driving);
+                        merge.addAll(joiningList);
+                        return merge;
+                })
+        .collect(ArrayList::new);
 
 //        驱动表记录:1,连接到的记录:[1, 1, 1]
 //        驱动表记录:2,连接到的记录:[2, 2]
@@ -41,13 +39,13 @@ Join
 Filter\Map\Reduce
 
 ```java
-	Optional<Integer> result=StreamX.of(Arrays.asList(1,-2,3,-4,5,-6))
-			.map(Math::abs)
-			.filter(i->i>2&&i< 5)
-			.reduce(Integer::sum);
+Optional<Integer> result=StreamX.of(Arrays.asList(1,-2,3,-4,5,-6))
+        .map(Math::abs)
+        .filter(i->i>2&&i< 5)
+        .reduce(Integer::sum);
 
-			assertTrue(result.isPresent());
-			assertTrue(result.get()==7);
+        assertTrue(result.isPresent());
+        assertTrue(result.get()==7);
 ```
 
 ## 解决了什么痛点？
@@ -123,19 +121,19 @@ for (Message msg : messages){
 
 ```java
 List<MessageVO> result = StreamX.of(messages)
-    .join(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
-        (msg, group) -> {
-            MessageVO out = new MessageVO();
-            out.setContent(msg.getContent());
-            out.setGroupName(group.getGroupName());
-            out.setUserId(msg.getUserId());
-            return out;
-        })
-    .joinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
-        (msg, usr) -> {
-            msg.setUserName(usr.getUserName());
-        })
-    .collect(ArrayList::new);
+        .flapJoin(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
+            (msg, group) -> {
+                MessageVO out = new MessageVO();
+                out.setContent(msg.getContent());
+                out.setGroupName(group.getGroupName());
+                out.setUserId(msg.getUserId());
+                return out;
+            })
+        .flapJoinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
+            (msg, usr) -> {
+                msg.setUserName(usr.getUserName());
+            })
+        .collect(ArrayList::new);
 ```
 
 

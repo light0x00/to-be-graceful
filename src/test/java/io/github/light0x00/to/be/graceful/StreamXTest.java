@@ -77,20 +77,20 @@ public class StreamXTest {
 
     @Test
     public void testJoin0() {
-        List<MessageVO> result = StreamX.of(messages)
-                .flapJoin(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
-                        (msg, group) -> {
-                            MessageVO out = new MessageVO();
-                            out.setContent(msg.getContent());
-                            out.setGroupName(group.getGroupName());
-                            out.setUserId(msg.getUserId());
-                            return out;
-                        })
-                .flapJoinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
-                        (msg, usr) -> {
-                            msg.setUserName(usr.getUserName());
-                        })
-                .collect(ArrayList::new);
+List<MessageVO> result = StreamX.of(messages)
+        .flapJoin(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
+                (msg, group) -> {
+                    MessageVO out = new MessageVO();
+                    out.setContent(msg.getContent());
+                    out.setGroupName(group.getGroupName());
+                    out.setUserId(msg.getUserId());
+                    return out;
+                })
+        .flapJoinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
+                (msg, usr) -> {
+                    msg.setUserName(usr.getUserName());
+                })
+        .collect(ArrayList::new);
         result.forEach(System.out::println);
     }
 
