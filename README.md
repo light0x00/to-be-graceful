@@ -11,7 +11,7 @@
 <dependency>
     <groupId>io.github.light0x00</groupId>
     <artifactId>to-be-graceful</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
 </dependency>
 ```
 
