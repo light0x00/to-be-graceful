@@ -75,6 +75,7 @@ public abstract class StreamPipeline<Input, Output> implements StreamX<Output> {
         return new StreamPipeline<Output, Output>(this, collection) {
             @Override
             public void invoke(Output out, Chain<Output> chain) {
+                consumer.accept(out);
                 chain.next(out);
             }
         };

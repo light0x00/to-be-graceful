@@ -244,6 +244,13 @@ List<MessageVO> result = StreamX.of(messages)
     }
 
     @Test
+    public void testConsume(){
+        StreamX.of(Arrays.asList(1,3,5))
+                .consume(System.out::println)
+                .withoutCollect();
+    }
+
+    @Test
     public void testForEach() {
         List<Integer> drivingList = Arrays.asList(1, 2, 3, 4, 5);
         List<Integer> joiningList = Arrays.asList(1, 3, 4, 5, 6);
