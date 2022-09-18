@@ -88,7 +88,7 @@ List<MessageVO> result = StreamX.of(messages)
                 msg.setUserName(usr.getUserName());
             })
         .collect(ArrayList::new);
-```
+`````
 
 ## 快速上手
 
@@ -99,7 +99,7 @@ List<MessageVO> result = StreamX.of(messages)
 <dependency>
     <groupId>io.github.light0x00</groupId>
     <artifactId>to-be-graceful</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
 </dependency>
 ```
 

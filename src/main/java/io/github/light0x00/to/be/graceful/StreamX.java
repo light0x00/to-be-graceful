@@ -131,6 +131,11 @@ public interface StreamX<T> {
         return outs;
     }
 
+    default <R> R collect(Collectors.Collector<T, R> collector) {
+        forEach(collector.accumulator);
+        return collector.result.get();
+    }
+
     default void withoutCollect() {
         forEach((o) -> {
         });

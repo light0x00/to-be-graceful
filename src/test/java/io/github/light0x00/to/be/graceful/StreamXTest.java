@@ -1,14 +1,14 @@
 package io.github.light0x00.to.be.graceful;
 
 import io.github.light0x00.to.be.graceful.experiment.CollectionBuilder;
+import io.github.light0x00.to.be.graceful.model.Message;
+import io.github.light0x00.to.be.graceful.model.MessageVO;
+import io.github.light0x00.to.be.graceful.model.User;
 import io.github.light0x00.to.be.graceful.streamx.JoinType;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import org.junit.Test;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -20,36 +20,6 @@ import static org.junit.Assert.assertTrue;
  * @since 2022/8/14
  */
 public class StreamXTest {
-
-    @AllArgsConstructor
-    @Data
-    static class Message {
-        private Integer groupId;
-        private Integer userId;
-        private String content;
-    }
-
-    @AllArgsConstructor
-    @Data
-    static class Group {
-        private Integer groupId;
-        private String groupName;
-    }
-
-    @AllArgsConstructor
-    @Data
-    static class User {
-        private Integer userId;
-        private String userName;
-    }
-
-    @Data
-    static class MessageVO {
-        private Integer userId;
-        private String userName;
-        private String groupName;
-        private String content;
-    }
 
     List<Message> messages = Arrays.asList(
             new Message(1, 1, "Alice: msg1 in group1"),
@@ -77,20 +47,20 @@ public class StreamXTest {
 
     @Test
     public void testJoin0() {
-List<MessageVO> result = StreamX.of(messages)
-        .flapJoin(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
-                (msg, group) -> {
-                    MessageVO out = new MessageVO();
-                    out.setContent(msg.getContent());
-                    out.setGroupName(group.getGroupName());
-                    out.setUserId(msg.getUserId());
-                    return out;
-                })
-        .flapJoinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
-                (msg, usr) -> {
-                    msg.setUserName(usr.getUserName());
-                })
-        .collect(ArrayList::new);
+        List<MessageVO> result = StreamX.of(messages)
+                .flapJoin(JoinType.INNER_JOIN, groups, Message::getGroupId, Group::getGroupId,
+                        (msg, group) -> {
+                            MessageVO out = new MessageVO();
+                            out.setContent(msg.getContent());
+                            out.setGroupName(group.getGroupName());
+                            out.setUserId(msg.getUserId());
+                            return out;
+                        })
+                .flapJoinAsItself(JoinType.INNER_JOIN, users, MessageVO::getUserId, User::getUserId,
+                        (msg, usr) -> {
+                            msg.setUserName(usr.getUserName());
+                        })
+                .collect(ArrayList::new);
         result.forEach(System.out::println);
     }
 
@@ -114,15 +84,6 @@ List<MessageVO> result = StreamX.of(messages)
                 Arrays.asList(2, 2, 2),
                 Arrays.asList(3, 3),
                 Arrays.asList(4))));
-    }
-
-    static class A {
-        int id;
-        int fk_id;
-    }
-
-    static class B {
-        int id;
     }
 
     @Test
@@ -244,8 +205,8 @@ List<MessageVO> result = StreamX.of(messages)
     }
 
     @Test
-    public void testConsume(){
-        StreamX.of(Arrays.asList(1,3,5))
+    public void testConsume() {
+        StreamX.of(Arrays.asList(1, 3, 5))
                 .consume(System.out::println)
                 .withoutCollect();
     }
@@ -286,6 +247,8 @@ List<MessageVO> result = StreamX.of(messages)
         assertThat(result1, hasItems(1, 3, 4, 5));
         assertThat(result2, hasItems(1, 4));
     }
+
+
 
     public void exampleThatNotGraceful() {
         List<MessageVO> result = new LinkedList<>();
