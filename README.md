@@ -87,7 +87,7 @@ List<MessageVO> result = StreamX.of(messages)
             (msg, usr) -> {
                 msg.setUserName(usr.getUserName());
             })
-        .collect(ArrayList::new);
+        .collect(Collectors.toList());
 `````
 
 ## 快速上手
@@ -117,7 +117,7 @@ List<List<Integer>> result = StreamX.of(drivingCollection)
                         merge.addAll(joiningList);
                         return merge;
                 })
-        .collect(ArrayList::new);
+        .collect(Collectors.toList());
 
 //        驱动表记录:1,连接到的记录:[1, 1, 1]
 //        驱动表记录:2,连接到的记录:[2, 2]
@@ -135,3 +135,17 @@ Optional<Integer> result=StreamX.of(Arrays.asList(1,-2,3,-4,5,-6))
         assertTrue(result.isPresent());
         assertTrue(result.get()==7);
 ```
+
+toMap\groupBy
+
+```java
+Map<String, MessageVO> result1 = StreamX.of(list)
+                .collect(Collectors.toMap(
+                        MessageVO::getUserName, Function.identity(), (d1, d2) -> d1));
+
+Map<String, List<MessageVO>> result2 = StreamX.of(list)
+        .collect(Collectors.groupBy(MessageVO::getUserName));
+```
+
+
+

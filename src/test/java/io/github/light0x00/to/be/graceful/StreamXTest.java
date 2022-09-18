@@ -4,6 +4,7 @@ import io.github.light0x00.to.be.graceful.experiment.CollectionBuilder;
 import io.github.light0x00.to.be.graceful.model.Message;
 import io.github.light0x00.to.be.graceful.model.MessageVO;
 import io.github.light0x00.to.be.graceful.model.User;
+import io.github.light0x00.to.be.graceful.streamx.Collectors;
 import io.github.light0x00.to.be.graceful.streamx.JoinType;
 import org.junit.Test;
 
@@ -60,7 +61,7 @@ public class StreamXTest {
                         (msg, usr) -> {
                             msg.setUserName(usr.getUserName());
                         })
-                .collect(ArrayList::new);
+                .collect(Collectors.toList());
         result.forEach(System.out::println);
     }
 

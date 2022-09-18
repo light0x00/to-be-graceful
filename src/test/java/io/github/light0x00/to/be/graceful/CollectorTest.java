@@ -19,9 +19,10 @@ public class CollectorTest {
     List<MessageVO> list = new ArrayList<>();
 
     {
-        list.add(MessageVO.builder().userName("何塞阿尔卡迪奥").content("地球是圆的就像个橙子").build());
+        list.add(MessageVO.builder().userName("何塞阿尔卡迪奥").content("就算你不敬畏上帝，也该敬畏金属。").build());
         list.add(MessageVO.builder().userName("何塞阿尔卡迪奥").content("我们注定在这里活活烂掉，享受不到科学带来的好处").build());
         list.add(MessageVO.builder().userName("梅尔吉亚得斯").content("魔鬼已被证明具有硫化物的属性，而这只不过是一点氯化汞").build());
+        list.add(MessageVO.builder().userName("乌尔苏拉").content("世界好像在原地转圈。").build());
     }
 
     @Test
