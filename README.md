@@ -2,52 +2,6 @@
 
 > To be, or not to be, that is the question.
 
-## 快速上手
-
-![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.light0x00/to-be-graceful/badge.svg)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-```xml
-<dependency>
-    <groupId>io.github.light0x00</groupId>
-    <artifactId>to-be-graceful</artifactId>
-    <version>0.0.4</version>
-</dependency>
-```
-
-Join
-
-```java
-List<Integer> drivingCollection = Arrays.asList(1, 2, 3, 4);
-List<Integer> joiningCollection = Arrays.asList(1, 1, 2, 1, 2, 3);
-List<List<Integer>> result = StreamX.of(drivingCollection)
-        .join(JoinType.INNER_JOIN, joiningCollection, Function.identity(), Function.identity(),
-                (driving, joiningList) -> {
-                        System.out.println("驱动表记录:" + driving + ",连接到的记录:" + joiningList);
-                        ArrayList<Integer> merge = new ArrayList<>();
-                        merge.add(driving);
-                        merge.addAll(joiningList);
-                        return merge;
-                })
-        .collect(ArrayList::new);
-
-//        驱动表记录:1,连接到的记录:[1, 1, 1]
-//        驱动表记录:2,连接到的记录:[2, 2]
-//        驱动表记录:3,连接到的记录:[3]
-```
-
-Filter\Map\Reduce
-
-```java
-Optional<Integer> result=StreamX.of(Arrays.asList(1,-2,3,-4,5,-6))
-        .map(Math::abs)
-        .filter(i->i>2&&i< 5)
-        .reduce(Integer::sum);
-
-        assertTrue(result.isPresent());
-        assertTrue(result.get()==7);
-```
-
 ## 解决了什么痛点？
 
 考虑这样一个场景，我们正在编写一个聊天室功能，很自然地，会有 User、Message、Group 等实体，如下所示：
@@ -136,5 +90,48 @@ List<MessageVO> result = StreamX.of(messages)
         .collect(ArrayList::new);
 ```
 
+## 快速上手
 
+![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.light0x00/to-be-graceful/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+```xml
+<dependency>
+    <groupId>io.github.light0x00</groupId>
+    <artifactId>to-be-graceful</artifactId>
+    <version>0.0.4</version>
+</dependency>
+```
+
+Join
+
+```java
+List<Integer> drivingCollection = Arrays.asList(1, 2, 3, 4);
+List<Integer> joiningCollection = Arrays.asList(1, 1, 2, 1, 2, 3);
+List<List<Integer>> result = StreamX.of(drivingCollection)
+        .join(JoinType.INNER_JOIN, joiningCollection, Function.identity(), Function.identity(),
+                (driving, joiningList) -> {
+                        System.out.println("驱动表记录:" + driving + ",连接到的记录:" + joiningList);
+                        ArrayList<Integer> merge = new ArrayList<>();
+                        merge.add(driving);
+                        merge.addAll(joiningList);
+                        return merge;
+                })
+        .collect(ArrayList::new);
+
+//        驱动表记录:1,连接到的记录:[1, 1, 1]
+//        驱动表记录:2,连接到的记录:[2, 2]
+//        驱动表记录:3,连接到的记录:[3]
+```
+
+Filter\Map\Reduce
+
+```java
+Optional<Integer> result=StreamX.of(Arrays.asList(1,-2,3,-4,5,-6))
+        .map(Math::abs)
+        .filter(i->i>2&&i< 5)
+        .reduce(Integer::sum);
+
+        assertTrue(result.isPresent());
+        assertTrue(result.get()==7);
+```

@@ -60,6 +60,12 @@
             <version>1.7.30</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.baidon.oms3</groupId>
+            <artifactId>test-sdk-SNAPSHOT</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
