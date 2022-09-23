@@ -99,7 +99,7 @@ List<MessageVO> result = StreamX.of(messages)
 <dependency>
     <groupId>io.github.light0x00</groupId>
     <artifactId>to-be-graceful</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6</version>
 </dependency>
 ```
 
