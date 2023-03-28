@@ -2,6 +2,11 @@
 
 > To be, or not to be, that is the question.
 
+
+![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.light0x00/to-be-graceful/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+
 ## 解决了什么痛点？
 
 考虑这样一个场景，我们正在编写一个聊天室功能，很自然地，会有 User、Message、Group 等实体，如下所示：
@@ -91,9 +96,6 @@ List<MessageVO> result = StreamX.of(messages)
 `````
 
 ## 快速上手
-
-![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.light0x00/to-be-graceful/badge.svg)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ```xml
 <dependency>
